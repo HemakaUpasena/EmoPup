@@ -83,12 +83,12 @@ export default function TrickGameScreen({ navigation }) {
     setTimeout(() => playSequence(firstSequence), 800);
   };
 
-  const playSequence = (seq) => {
+  const playSequence = async(seq) => {
     let delay = 0;
     seq.forEach((color, index) => {
       setTimeout(() => {
         flashButton(color.id);
-        await playTap();
+        playTap();
         if (index === seq.length - 1) {
           setTimeout(() => {
             setGameState('input');
@@ -148,7 +148,7 @@ export default function TrickGameScreen({ navigation }) {
       setLevel(newLevel);
       setGameState('won');
       setMessage(`🎉 Perfect! Level ${level} complete! +${level * 10} points!`);
-      await playFanfare();
+      playFanfare();
 
       // Celebrate
       Animated.sequence([

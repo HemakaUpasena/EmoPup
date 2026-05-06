@@ -104,7 +104,7 @@ export default function FetchGameScreen({ navigation }) {
       const newScore = score + 1;
       setScore(newScore);
       setMessage(`${getDogEmoji()} Caught it! Good boy! 🎉`);
-      await playSuccess();
+      playSuccess();
 
       // Success flash
       Animated.sequence([

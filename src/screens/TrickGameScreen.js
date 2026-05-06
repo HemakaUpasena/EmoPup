@@ -72,7 +72,7 @@ export default function TrickGameScreen({ navigation }) {
     return emojis[breed] || '🐶';
   };
 
-  const startGame = () => {
+    const startGame = async () => {
     setScore(0);
     setLevel(1);
     setUserSequence([]);
@@ -114,7 +114,7 @@ export default function TrickGameScreen({ navigation }) {
     setTimeout(() => setActiveColor(null), 400);
   };
 
-  const handleUserInput = (color) => {
+  const handleUserInput = async (color) => {
     if (gameState !== 'input') return;
 
     flashButton(color.id);

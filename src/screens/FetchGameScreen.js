@@ -65,7 +65,7 @@ export default function FetchGameScreen({ navigation }) {
     return emojis[breed] || '🐶';
   };
 
-  const throwStick = () => {
+    const throwStick = async () => {
     if (gameState !== 'idle') return;
     setGameState('throwing');
     await playBounce();
@@ -92,7 +92,7 @@ export default function FetchGameScreen({ navigation }) {
     });
   };
 
-  const runDogToStick = () => {
+    const runDogToStick = async () => {
     // Dog runs to stick
     Animated.timing(dogX, {
       toValue: width * 0.55,

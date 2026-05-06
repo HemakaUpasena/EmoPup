@@ -1,3 +1,4 @@
+import { playTap, playFanfare } from '../sounds';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
@@ -87,6 +88,7 @@ export default function TrickGameScreen({ navigation }) {
     seq.forEach((color, index) => {
       setTimeout(() => {
         flashButton(color.id);
+        await playTap();
         if (index === seq.length - 1) {
           setTimeout(() => {
             setGameState('input');
@@ -146,6 +148,7 @@ export default function TrickGameScreen({ navigation }) {
       setLevel(newLevel);
       setGameState('won');
       setMessage(`🎉 Perfect! Level ${level} complete! +${level * 10} points!`);
+      await playFanfare();
 
       // Celebrate
       Animated.sequence([

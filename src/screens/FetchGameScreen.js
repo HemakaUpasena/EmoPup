@@ -1,3 +1,4 @@
+import { playBounce, playSuccess } from '../sounds';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
@@ -67,6 +68,7 @@ export default function FetchGameScreen({ navigation }) {
   const throwStick = () => {
     if (gameState !== 'idle') return;
     setGameState('throwing');
+    await playBounce();
     setMessage('Stick is flying! 🪵');
 
     // Reset positions
@@ -102,6 +104,7 @@ export default function FetchGameScreen({ navigation }) {
       const newScore = score + 1;
       setScore(newScore);
       setMessage(`${getDogEmoji()} Caught it! Good boy! 🎉`);
+      await playSuccess();
 
       // Success flash
       Animated.sequence([

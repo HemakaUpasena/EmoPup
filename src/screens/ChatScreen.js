@@ -1,3 +1,4 @@
+import { playWoof } from '../sounds';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
@@ -179,6 +180,7 @@ export default function ChatScreen() {
       }
     } catch (e) { console.log(e); }
 
+    await playWoof();
     setLoading(false);
   };
 

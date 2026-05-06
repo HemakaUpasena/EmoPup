@@ -8,7 +8,7 @@ import { Text } from 'react-native';
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
-import BreedSelectScreen from './src/screens/BreedSelectScreen';
+import BreedSelectScreen from './src/screens/BreedSelectScreen.js';
 import HomeScreen from './src/screens/HomeScreen';
 import MoodScreen from './src/screens/MoodScreen';
 import ChatScreen from './src/screens/ChatScreen';

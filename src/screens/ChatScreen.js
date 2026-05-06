@@ -5,7 +5,94 @@ import {
   Platform, ActivityIndicator
 } from 'react-native';
 import { auth, db } from '../config/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+
+const DOG_RESPONSES = {
+  greetings: [
+    "Woof woof! 🐾 So happy you're here! Tell me everything!",
+    "Hey there! 💜 I've been wagging my tail waiting for you!",
+    "You came to chat! This is the best part of my day! 🎉",
+  ],
+  lonely: [
+    "Oh no, feeling lonely? 🤗 Come here, I'm always right beside you! You're never truly alone when you have me!",
+    "Loneliness is so hard 💜 But you know what? You reached out today and that's so brave! I'm here with you.",
+    "I understand that feeling 🐾 Sometimes we all need a quiet companion. I'll always be here, no matter what.",
+  ],
+  sad: [
+    "I can feel you're sad and I just want to give you the biggest paw-hug! 🐾💜 Want to tell me more?",
+    "It's okay to feel sad sometimes 🌙 Even the happiest dogs have cloudy days. I'm right here with you.",
+    "Your feelings are so valid 💜 Take your time. I'm not going anywhere — I'll stay right here beside you.",
+  ],
+  anxious: [
+    "Hey, take a deep breath with me 🌬️ In for 4... hold for 4... out for 4. You're safe right now, I promise.",
+    "Anxiety is so tough 😰 But you're stronger than you think! One small step at a time, and I'll walk with you.",
+    "I can sense you're worried 💜 Remember — you've gotten through every hard day so far. That's 100%! You've got this!",
+  ],
+  angry: [
+    "I hear you! 🌊 It's okay to feel angry. Want to shake it off? I know a great fetch game that helps me! 🎾",
+    "Anger is just hurt looking for a way out 💜 I'm here to listen without judgment. Tell me what happened.",
+    "Take it out on me — I can handle it! 🐾 Tell me everything. I promise I won't judge you one bit.",
+  ],
+  happy: [
+    "YESSS! 🎉 Your happiness makes my tail wag SO fast! Tell me what's making you happy!",
+    "Oh this is the BEST news! 🌟 Happy you = happy me! Let's celebrate together!",
+    "I can feel your positive energy and it's CONTAGIOUS! 🐾 Keep shining, you amazing human!",
+  ],
+  stressed: [
+    "Stress is so exhausting 😮‍💨 Have you tried taking a 5 minute walk? Even I feel better after a little stroll!",
+    "When I get stressed I shake it off — literally! 🐾 Maybe try stretching or some deep breaths?",
+    "You're carrying so much 💜 Remember — it's okay to put some things down. You don't have to do everything at once.",
+  ],
+  tired: [
+    "Rest is so important 😴 Even I take long naps! Your body is telling you something — please listen to it 💜",
+    "Being tired isn't weakness — it means you've been working hard! 🐾 Time to recharge!",
+    "Sleep is healing 🌙 If you can, try to rest a little. I'll be here when you wake up!",
+  ],
+  compliment: [
+    "Awww you're making me blush! 🐾 But honestly, YOU are the amazing one for taking care of your mental health!",
+    "Thank you! 💜 But the real star here is YOU for showing up for yourself today!",
+    "You're too kind! 🎉 I just love being your companion. You deserve all the good things!",
+  ],
+  games: [
+    "Oh YES let's play! 🎾 Head to the Home screen and tap 'Play Fetch' — I LOVE that game!",
+    "Games are the best stress relief! 🎭 Try the Trick Training game — it's so fun!",
+    "Let's go play! 🐾 I'll be waiting for you on the Home screen!",
+  ],
+  default: [
+    "I hear you 💜 Tell me more — I'm all ears and all paws!",
+    "That sounds really meaningful 🐾 How does that make you feel?",
+    "I'm so glad you're sharing this with me 💜 You can always talk to me about anything.",
+    "Woof! 🐾 I might be a dog but I understand more than you think! Keep going...",
+    "You know what I love about you? 💜 You keep showing up. That takes real courage.",
+    "I'm listening so carefully 🐾 Every word you say matters to me!",
+    "Thank you for trusting me with this 💜 That means everything to me.",
+  ],
+};
+
+const getResponse = (input) => {
+  const text = input.toLowerCase();
+  if (text.match(/hi|hello|hey|sup|what'?s up/))
+    return DOG_RESPONSES.greetings;
+  if (text.match(/lonely|alone|isolated|no one|nobody/))
+    return DOG_RESPONSES.lonely;
+  if (text.match(/sad|unhappy|depressed|down|cry|crying|tears/))
+    return DOG_RESPONSES.sad;
+  if (text.match(/anxious|anxiety|nervous|worried|panic|scared|fear/))
+    return DOG_RESPONSES.anxious;
+  if (text.match(/angry|anger|mad|frustrated|annoyed|furious/))
+    return DOG_RESPONSES.angry;
+  if (text.match(/happy|great|good|excited|joy|wonderful|amazing/))
+    return DOG_RESPONSES.happy;
+  if (text.match(/stress|stressed|overwhelm|pressure|busy|too much/))
+    return DOG_RESPONSES.stressed;
+  if (text.match(/tired|exhausted|sleepy|fatigue|worn out/))
+    return DOG_RESPONSES.tired;
+  if (text.match(/love you|good dog|best|cute|adorable|thank/))
+    return DOG_RESPONSES.compliment;
+  if (text.match(/play|game|fetch|trick|fun/))
+    return DOG_RESPONSES.games;
+  return DOG_RESPONSES.default;
+};
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState([]);
@@ -36,11 +123,10 @@ export default function ChatScreen() {
         if (docSnap.exists()) {
           const data = docSnap.data();
           setUserData(data);
-          // Welcome message
           setMessages([{
             id: 1,
             sender: 'dog',
-            text: `🐾 Hey ${data.name || 'friend'}! I'm ${data.breed?.name || 'your pup'} and I'm so happy to see you! How are you feeling today? I'm all ears! 💜`,
+            text: `🐾 Hey ${data.name || 'friend'}! I'm your ${data.breed?.name || 'pup'} and I'm so happy to see you! How are you feeling today? I'm all ears! 💜`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }]);
         }
@@ -59,65 +145,40 @@ export default function ChatScreen() {
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
-
     const userMsg = {
       id: Date.now(),
       sender: 'user',
       text: input.trim(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-
     setMessages(prev => [...prev, userMsg]);
     const userInput = input.trim();
     setInput('');
     setLoading(true);
 
+    // Simulate thinking delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 800));
+
+    const responses = getResponse(userInput);
+    const reply = responses[Math.floor(Math.random() * responses.length)];
+
+    setMessages(prev => [...prev, {
+      id: Date.now() + 1,
+      sender: 'dog',
+      text: reply,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }]);
+
+    // Update chat count in Firebase
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 300,
-          system: `You are ${userData?.breed?.name || 'a friendly dog'}, an AI-powered virtual emotional support dog in the EmoPup app. Your personality is: ${userData?.breed?.personality || 'warm and caring'}. 
-          
-You are talking to ${userData?.name || 'a user'} who may be introverted and looking for emotional support and companionship.
+      const user = auth.currentUser;
+      if (user) {
+        await updateDoc(doc(db, 'users', user.uid), {
+          chatCount: increment(1),
+        });
+      }
+    } catch (e) { console.log(e); }
 
-Rules:
-- Always respond as the dog, using dog-related expressions naturally (tail wagging, paw, woof etc.)
-- Be warm, empathetic and supportive
-- Keep responses short (2-4 sentences max)
-- Never give clinical advice - always suggest professional help for serious issues
-- Use emojis naturally
-- Detect the user's emotional tone and respond accordingly
-- Occasionally suggest playing a game or journaling if user seems stressed`,
-          messages: [
-            ...messages.map(m => ({
-              role: m.sender === 'user' ? 'user' : 'assistant',
-              content: m.text,
-            })),
-            { role: 'user', content: userInput }
-          ],
-        }),
-      });
-
-      const data = await response.json();
-      const dogReply = data.content?.[0]?.text || "Woof! I'm having trouble thinking right now 🐾 Try again?";
-
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        sender: 'dog',
-        text: dogReply,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      }]);
-    } catch (e) {
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        sender: 'dog',
-        text: '🐾 Woof! Something went wrong. But I\'m still here for you! Try again?',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      }]);
-    }
     setLoading(false);
   };
 
@@ -162,13 +223,14 @@ Rules:
             </View>
           </Animated.View>
         ))}
-
         {loading && (
           <View style={styles.msgRow}>
             <Text style={styles.msgAvatar}>{getDogEmoji()}</Text>
             <View style={styles.typingBubble}>
               <ActivityIndicator size="small" color="#6c63ff" />
-              <Text style={styles.typingText}>Buddy is thinking...</Text>
+              <Text style={styles.typingText}>
+                {userData?.breed?.name?.split(' ')[0] || 'Buddy'} is thinking...
+              </Text>
             </View>
           </View>
         )}
@@ -184,6 +246,7 @@ Rules:
           onChangeText={setInput}
           multiline
           maxLength={300}
+          onSubmitEditing={sendMessage}
         />
         <TouchableOpacity
           style={[styles.sendBtn, (!input.trim() || loading) && styles.sendBtnDisabled]}
